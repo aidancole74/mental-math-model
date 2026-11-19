@@ -39,23 +39,24 @@ export interface AnswerInput {
 /**
  * Records one practice answer: updates the skill's box and stats, marks today
  * as a practice day, and logs a miss for the review list.
+ *
+ * Practising a skill that was never formally learned (reachable from a skill's
+ * page or a direct link) counts as learning it, so the answer is never lost.
  */
 export function withAttempt(data: AppData, input: AnswerInput, now: number): AppData {
   const { problem } = input;
-  const current = data.skills[problem.skillId];
-  const skills = current
-    ? {
-        ...data.skills,
-        [problem.skillId]: applyAttempt(current, {
-          at: now,
-          ok: input.ok,
-          ms: input.ms,
-          d: problem.difficulty,
-          hint: input.hint,
-          t: targetMsFor(getSkill(problem.skillId), problem.difficulty),
-        }),
-      }
-    : data.skills;
+  const current = data.skills[problem.skillId] ?? newProgress(now);
+  const skills = {
+    ...data.skills,
+    [problem.skillId]: applyAttempt(current, {
+      at: now,
+      ok: input.ok,
+      ms: input.ms,
+      d: problem.difficulty,
+      hint: input.hint,
+      t: targetMsFor(getSkill(problem.skillId), problem.difficulty),
+    }),
+  };
 
   const today = dayKey(now);
   const days = data.days.includes(today) ? data.days : [...data.days, today];

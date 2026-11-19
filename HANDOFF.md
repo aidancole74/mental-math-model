@@ -244,6 +244,17 @@ the app in Playwright and look at screenshots.
 - Hands-free mode: read problem → listen → say right/wrong (+ correct answer) → short pause → next;
   a "repeat" voice command.
 
+### Hosting (GitHub Pages)
+
+`.github/workflows/deploy-pages.yml` runs `npm ci`, `npm test`, `npm run build` and publishes `dist/` on every
+push to `main` (or by hand from the Actions tab). Live URL: https://aidancole74.github.io/mental-math-model/ .
+One-time owner setup: repo Settings → Pages → Source: "GitHub Actions". `base: './'` + hash routes mean the build
+works from the `/mental-math-model/` subfolder; verified locally that the service worker registers with that
+scope and the app reloads offline. Voice mode (step 7) is on hold at the owner's request.
+
+**Practising an unlearned skill** (from its page or a direct link) now counts as learning it: `withAttempt`
+creates the progress record instead of dropping the answer.
+
 ### UI refresh (between steps 6 and 7)
 
 The owner asked for a fuller, more polished UI ("polished & calm" chosen over gamified; no daily goal,

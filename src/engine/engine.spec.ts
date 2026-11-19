@@ -306,6 +306,13 @@ describe('progress updates', () => {
     expect(data.days).toHaveLength(1); // same day, not duplicated
   });
 
+  it('keeps answers to a skill that was practised before being learned', () => {
+    const p = makeProblem(getSkill('square-5'), 1, 7);
+    const data = withAttempt(emptyData(), { problem: p, ok: true, ms: 3000, hint: false, given: String(p.answer) }, T0);
+    expect(data.skills['square-5']).toMatchObject({ total: 1, correct: 1, learnedAt: T0, fastestMs: 3000 });
+    expect(data.days).toEqual([dayKey(T0)]);
+  });
+
   it('does not mutate the input', () => {
     const data = withLearned(emptyData(), 'x11', T0);
     const snapshot = JSON.stringify(data);
