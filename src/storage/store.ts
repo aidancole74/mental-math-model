@@ -5,7 +5,7 @@
  */
 
 import { useSyncExternalStore } from 'react';
-import type { Summary } from '../engine/session';
+import type { AnswerRecord, Summary } from '../engine/session';
 import { browserKV, loadData, saveData } from './db';
 import type { AppData } from './schema';
 
@@ -43,7 +43,14 @@ export function useData(): AppData {
  * The just-finished session's summary. Deliberately not persisted: it only
  * feeds the summary screen, and the session itself is already saved.
  */
-let lastSummary: { summary: Summary; focus: string | null } | null = null;
+let lastSummary: {
+  summary: Summary;
+  focus: string | null;
+  /** Every answer, in order, for the problem-by-problem recap. */
+  results: AnswerRecord[];
+  /** Best session average before this one, for the "new personal best" callout. */
+  prevBestMs: number | null;
+} | null = null;
 
 export function setLastSummary(value: typeof lastSummary): void {
   lastSummary = value;

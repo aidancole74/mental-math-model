@@ -5,7 +5,7 @@ import { go } from '../router';
 import { getSkill, hasSkill, makeProblem } from '../skills/registry';
 import { getData, updateData, useData } from '../storage/store';
 import { ProblemText, Steps, TopBar } from '../ui/bits';
-import { CATEGORY_LABELS } from '../ui/labels';
+import { CatChip } from '../ui/visuals';
 import { ProblemSolver } from '../ui/ProblemSolver';
 import { NotFound } from './NotFound';
 
@@ -67,7 +67,9 @@ function LessonFor({ id }: { id: string }) {
       <main className="screen">
         <TopBar onBack={close} backIcon="close" backLabel="Close lesson" title={dots} />
         <div className="screen-body">
-          <p className="eyebrow">{CATEGORY_LABELS[skill.category]}</p>
+          <div>
+            <CatChip category={skill.category} />
+          </div>
           <h1 className="title-xl">{skill.title}</h1>
           {skill.lesson.idea.map((para, i) => (
             <p key={i} className="lead">

@@ -2,7 +2,11 @@ import type { ReactNode } from 'react';
 import type { Step } from '../skills/types';
 
 /** A few inline icons — cheaper than an icon library. */
-export function Icon({ name, size = 24 }: { name: 'close' | 'back' | 'lock' | 'check' | 'backspace' | 'settings' | 'list' | 'flame'; size?: number }) {
+export type IconName =
+  | 'close' | 'back' | 'lock' | 'check' | 'backspace' | 'settings' | 'list' | 'flame'
+  | 'home' | 'book' | 'chart' | 'chevron' | 'play' | 'bolt' | 'target' | 'trophy' | 'x' | 'refresh';
+
+export function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   const common = {
     width: size,
     height: size,
@@ -29,6 +33,26 @@ export function Icon({ name, size = 24 }: { name: 'close' | 'back' | 'lock' | 'c
       return <svg {...common}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>;
     case 'list':
       return <svg {...common}><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>;
+    case 'home':
+      return <svg {...common}><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" /></svg>;
+    case 'book':
+      return <svg {...common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" /><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" /></svg>;
+    case 'chart':
+      return <svg {...common}><path d="M4 20h16" /><path d="M7 16v-5M12 16V7M17 16v-8" /></svg>;
+    case 'chevron':
+      return <svg {...common}><path d="M9 5l7 7-7 7" /></svg>;
+    case 'play':
+      return <svg {...common}><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" /></svg>;
+    case 'bolt':
+      return <svg {...common}><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z" /></svg>;
+    case 'target':
+      return <svg {...common}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.8" fill="currentColor" /></svg>;
+    case 'trophy':
+      return <svg {...common}><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z" /></svg>;
+    case 'x':
+      return <svg {...common}><path d="M7 7l10 10M17 7 7 17" /></svg>;
+    case 'refresh':
+      return <svg {...common}><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></svg>;
     case 'flame':
       return <svg {...common}><path d="M12 22c4 0 7-2.7 7-7 0-4-3-6.5-4-10-2 2-3 4-3 6-1-1-2-2.5-2-4-2.5 2-5 5.2-5 8 0 4.3 3 7 7 7z" /></svg>;
   }

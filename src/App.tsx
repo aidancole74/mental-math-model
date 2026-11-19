@@ -11,6 +11,7 @@ import { Summary } from './screens/Summary';
 import { Progress } from './screens/Progress';
 import { Mistakes, MistakesRetry } from './screens/Mistakes';
 import { Placement } from './screens/Placement';
+import { TabBar, tabFor } from './ui/visuals';
 
 const THEME_COLORS = { light: '#f6f6f3', dark: '#0c1016' };
 
@@ -35,7 +36,20 @@ function useTheme(): void {
 export function App() {
   useTheme();
   const route = useRoute();
+  const mistakes = useData().mistakes.length;
+  const tab = tabFor(route);
 
+  // Tab screens (home, learn, progress, settings) get the menu bar; focused
+  // flows — lessons, sessions, summaries, the placement quiz — keep the whole screen.
+  return (
+    <div className={tab ? 'with-tabs' : undefined}>
+      <Screen route={route} />
+      {tab && <TabBar active={tab} badges={{ progress: mistakes }} />}
+    </div>
+  );
+}
+
+function Screen({ route }: { route: ReturnType<typeof useRoute> }) {
   switch (route.name) {
     case 'home':
       return <Home />;

@@ -1,17 +1,19 @@
-import { learnedSkills } from '../engine/curriculum';
 import { dayKey } from '../engine/progress';
-import { isMastered, mastery } from '../engine/scheduler';
+import { isMastered } from '../engine/scheduler';
+import { categoryStats, weekStrip } from '../engine/stats';
 import { computeStreak, streakMessage } from '../engine/streak';
 import { go } from '../router';
 import { SKILLS } from '../skills/registry';
 import { useData } from '../storage/store';
-import { Bar, Icon, TopBar, seconds } from '../ui/bits';
+import { Bar, Icon, seconds } from '../ui/bits';
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '../ui/labels';
 import { SpeedChart } from '../ui/SpeedChart';
+import { CatTile, PageHead } from '../ui/visuals';
 
 export function Progress() {
   const data = useData();
   const streak = computeStreak(data.days, dayKey(Date.now()));
-  const learned = learnedSkills(data);
+  const week = weekStrip(data.days, Date.now());
   const all = Object.values(data.skills);
   const total = all.reduce((a, p) => a + p.total, 0);
   const correct = all.reduce((a, p) => a + p.correct, 0);
@@ -23,17 +25,28 @@ export function Progress() {
 
   return (
     <main className="screen">
-      <TopBar onBack={() => go('/')} title="Progress" />
       <div className="screen-body">
-        <div className="card streak">
-          <div className={'streak-icon' + (streak.current ? '' : ' is-off')}>
-            <Icon name="flame" size={26} />
+        <PageHead title="Progress" sub={total ? total + ' problems solved so far' : 'Your numbers will show up here'} />
+        <div className="card">
+          <div className="streak">
+            <div className={'streak-icon' + (streak.current ? '' : ' is-off')}>
+              <Icon name="flame" size={26} />
+            </div>
+            <div>
+              <p className="row-title">{streak.current ? streak.current + '-day streak' : 'No streak yet'}</p>
+              <p className="row-sub">{streakMessage(streak)}</p>
+            </div>
           </div>
-          <div>
-            <p className="row-title">
-              {streak.current ? streak.current + '-day streak' : 'No streak yet'}
-            </p>
-            <p className="row-sub">{streakMessage(streak)}</p>
+          <div className="week" style={{ marginTop: 16 }}>
+            {week.map((d) => (
+              <div
+                key={d.key}
+                className={'week-day' + (d.practised ? ' is-done' : '') + (d.isToday ? ' is-today' : '')}
+              >
+                <span className="week-dot">{d.practised && <Icon name="check" size={16} />}</span>
+                {d.label}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -61,12 +74,49 @@ export function Progress() {
           </div>
         </div>
 
+        <button className="row" onClick={() => go('/mistakes')}>
+          <div className="row-main">
+            <div className="row-title">Mistakes to review</div>
+            <div className="row-sub">
+              {data.mistakes.length ? data.mistakes.length + ' to go back over' : 'None right now'}
+            </div>
+          </div>
+          <span className="chip">{data.mistakes.length}</span>
+        </button>
+
         <div className="card">
           <p className="row-title">Average time per right answer</p>
           <p className="row-sub" style={{ marginBottom: 12 }}>
             Last {Math.min(30, data.sessions.length)} sessions · lower is faster
           </p>
           <SpeedChart sessions={data.sessions} />
+        </div>
+
+        <div className="card">
+          <p className="row-title">By category</p>
+          <p className="row-sub" style={{ marginBottom: 6 }}>
+            Learned, mastered and lifetime accuracy
+          </p>
+          {CATEGORY_ORDER.map((cat) => {
+            const st = categoryStats(data, cat);
+            return (
+              <div key={cat} className={'breakdown-row cat-' + cat}>
+                <CatTile category={cat} size={34} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 650, marginBottom: 6 }}>{CATEGORY_LABELS[cat]}</div>
+                  <Bar value={st.total ? st.learned / st.total : 0} label={CATEGORY_LABELS[cat] + ' learned'} />
+                </div>
+                <div className="breakdown-nums">
+                  <strong>
+                    {st.learned}/{st.total}
+                  </strong>{' '}
+                  learned
+                  <br />
+                  {st.mastered} mastered · {st.accuracy === null ? '—' : Math.round(st.accuracy * 100) + '%'}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="card">
@@ -88,39 +138,6 @@ export function Progress() {
             <span className="kv-value">{perfect}</span>
           </div>
         </div>
-
-        <button className="row" onClick={() => go('/mistakes')}>
-          <div className="row-main">
-            <div className="row-title">Mistakes to review</div>
-            <div className="row-sub">
-              {data.mistakes.length ? data.mistakes.length + ' to go back over' : 'None right now'}
-            </div>
-          </div>
-          <span className="chip">{data.mistakes.length}</span>
-        </button>
-
-        {learned.length > 0 && (
-          <section className="list">
-            <h2 className="eyebrow section-title">Skill mastery</h2>
-            {learned.map((s) => {
-              const p = data.skills[s.id];
-              if (!p) return null;
-              return (
-                <button key={s.id} className="row" onClick={() => go('/skill/' + s.id)}>
-                  <div className="row-main">
-                    <div className="row-title">{s.title}</div>
-                    <Bar value={mastery(p)} label={s.title + ' mastery'} />
-                  </div>
-                  {isMastered(p) && <Icon name="check" size={22} />}
-                </button>
-              );
-            })}
-          </section>
-        )}
-
-        <button className="btn btn-ghost" onClick={() => go('/placement')}>
-          Take the placement quiz
-        </button>
       </div>
     </main>
   );

@@ -18,6 +18,7 @@ in headless Chromium at 390×844 (light + dark) with no console errors. A 20,000
 | 4 | Progress screen (streak, chart, bests, mastery), mistakes review, placement quiz, backup, PWA/offline, dark mode | ✅ |
 | 5 | Percentages track — 14 skills total, exact + "estimate within 10%" | ✅ |
 | 6 | Remaining curriculum — 17 skills, 36 total; choice answers; 3-place decimals | ✅ |
+| 6b | UI refresh (owner's request): menu bar, category colours, dashboards, richer practice + summary | ✅ |
 | 7 | Voice mode | ⏭ next |
 
 ## Working agreement with the owner
@@ -242,6 +243,26 @@ the app in Playwright and look at screenshots.
   "point", "dollars and cents", "percent", "about", hundreds/thousands. Show what was heard; one-tap retry or correct.
 - Hands-free mode: read problem → listen → say right/wrong (+ correct answer) → short pause → next;
   a "repeat" voice command.
+
+### UI refresh (between steps 6 and 7)
+
+The owner asked for a fuller, more polished UI ("polished & calm" chosen over gamified; no daily goal,
+achievements, sprint or daily challenge). What changed:
+- **Menu bar** (`ui/visuals.tsx` `TabBar`, `tabFor(route)`): Home / Learn / Progress / Settings. Shown on tab
+  screens only; lessons, sessions, summary, placement and mistake retries stay full-screen. `App.tsx` wraps tab
+  screens in `.with-tabs`, which pads the bottom. Progress tab shows a red badge with the mistakes count.
+- **Category identity**: each category has a colour pair (`--cat-<id>` / `--cat-<id>-bg`, light + dark) and a
+  text glyph (`CATEGORY_GLYPH`); add class `cat-<id>` to any element to get `--cat` / `--cat-bg`. `CatTile`,
+  `CatChip`, `Ring` (SVG progress ring) live in `ui/visuals.tsx`.
+- **Home**: greeting + streak chip, 7-day week strip, mini stats, "Worth a quick review" (2 picks from
+  `reviewPicks`), and the two main actions as rich buttons. **Learn**: category sections with mastery rings and
+  a "Next" tag. **Skill detail**: hero, mastery ring with level and next review, stats, last-12-answers bars,
+  the lesson idea; actions stick above the menu bar (`.sticky-actions`). **Progress**: week strip, per-category
+  breakdown, mistakes row moved up. **Settings**: grouped cards.
+- **Practice**: 10-segment progress (green/red per answer), "N in a row" chip from 3, category chip for the
+  current skill in smart mix, pop/shake on right/wrong. **Summary**: accuracy ring, headline, new-personal-best
+  callout (`prevBestMs` from `bestSessionAvg`), best run, and a problem-by-problem recap rebuilt from ids.
+- Pure helpers for all of this are in `engine/stats.ts` with `stats.spec.ts`.
 
 ### Step 6 notes
 
