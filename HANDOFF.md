@@ -4,11 +4,11 @@ Read this first, then `BRIEF.md` (the owner's original requirements, verbatim).
 
 ## Status
 
-**Build steps 1–5 of 7 are done.** Next up: **step 6 (remaining curriculum)**, then step 7 (voice mode).
+**Build steps 1–6 of 7 are done.** Next up: **step 7 (voice mode)** — waiting for the owner's go-ahead.
 
-At handoff: **697 tests passing** (13 files), `tsc -b` clean, `npm run build` clean, all features driven
-end-to-end in headless Chromium at phone size (390×844) with no console errors. A 20,000-seeds-per-level
-stress run (~1.1M generated problems) passed.
+After step 6: **1,374 tests passing** (23 files), `tsc -b` clean, `npm run build` clean, new screens driven
+in headless Chromium at 390×844 (light + dark) with no console errors. A 20,000-seeds-per-level stress run
+(~2.2M generated problems) passed.
 
 | Step | What | State |
 |---|---|---|
@@ -17,8 +17,9 @@ stress run (~1.1M generated problems) passed.
 | 3 | Lesson screen, practice session + number pad, localStorage, Leitner smart mix, summary | ✅ |
 | 4 | Progress screen (streak, chart, bests, mastery), mistakes review, placement quiz, backup, PWA/offline, dark mode | ✅ |
 | 5 | Percentages track — 14 skills total, exact + "estimate within 10%" | ✅ |
-| 6 | Remaining curriculum | ⏭ next |
-| 7 | Voice mode | pending |
+| 6 | Remaining curriculum — 17 skills, 36 total; choice answers; 3-place decimals | ✅ |
+| 6b | UI refresh (owner's request): menu bar, category colours, dashboards, richer practice + summary | ✅ |
+| 7 | Voice mode | ⏭ next |
 
 ## Working agreement with the owner
 
@@ -28,15 +29,15 @@ stress run (~1.1M generated problems) passed.
 - Simplicity first: one obvious action per screen, primary action at the bottom (thumb reach), no popups
   (confirmations are inline), large tap targets, one-handed use.
 - Minimal dependencies (runtime deps are only `react` and `react-dom`).
-- There is **no git repo yet**. Don't commit/push unless the owner asks; if they give a GitHub repo, push there.
+- The project now lives in a git repo (`aidancole74/mental-math-model`). Don't commit/push unless the owner asks.
 - Report honestly: if a test fails, say so; verify UI changes by actually driving the app and looking at screenshots.
 
 ## Run it
 
 ```bash
 npm install
-npm test                                  # 697 tests, ~3s
-VITE_QMM_SEEDS=20000 npm test             # deep stress pass of every generator (~90s)
+npm test                                  # 1,374 tests, ~8s
+VITE_QMM_SEEDS=20000 npm test             # deep stress pass of every generator (~4 min)
 npm run dev                               # dev server (no service worker)
 npm run build && npx vite preview         # production build: needed to test PWA/offline
 ```
@@ -93,13 +94,22 @@ A skill is one `defineSkill({...})` object:
 - optional: `answerMode: 'estimate'`, `targetSeconds: [d1, d2, d3]` (what counts as "fast"), `hintMayContainAnswer`
 
 `ProblemSpec`: `prompt`, `spoken` (TTS-friendly, **no symbols** × ÷ ² % $ ≈ −), `answer`, `answerKind`
-(`integer` | `money` | `decimal`), `meta`, optional `tolerance` (estimate problems), `unit` (prefix, '$'),
-`suffix` ('%', ' years').
+(`integer` | `money` | `decimal` | `choice`), `meta`, optional `tolerance` (estimate problems), `unit` (prefix, '$'),
+`suffix` ('%', ' years'), `decimals` (places typed/graded, default 2), `choices` (labels for `choice` problems).
+
+**Choice answers** (step 6): `answerKind: 'choice'`, `choices: string[]`, `answer` = index. `ProblemSolver` shows
+`ui/ChoicePad.tsx` (big buttons, one tap answers, digit keys 1–n also work) instead of the keypad. `given` is
+stored as the index string; `formatGiven()` / `formatAnswer()` turn it into the label. Session dedupe uses the
+prompt (not the answer) for choice problems. Only `day-of-week` uses it so far.
+
+**Decimals** (step 6): `decimals` drives the keypad cap (`applyKey(…, maxDecimals)`) and grading precision
+(`isCorrect`: within half a unit in the last place). Only `frac-decimal` uses 3.
 
 ### What the shared harness enforces for every skill (`registry.spec.ts`)
 
 500 seeds × 3 difficulties per skill (configurable with `VITE_QMM_SEEDS`):
-answer == `truth(meta)` · finite and of the declared kind (money = whole cents) · prompt and speakable
+answer == `truth(meta)` · finite and of the declared kind (money = whole cents) · no more decimal places than
+`decimals` allows · choice problems have valid unique choices (others have none) · prompt and speakable
 `spoken` · estimate-mode skills always have a tolerance · walkthrough non-empty and its last step states the
 answer · hint never states the answer (whole-number match, ignoring "N%" labels) · all `constraints` hold ·
 reproducible from seed and from id · actually varies with the seed. Plus registry integrity: unique ids and
@@ -145,7 +155,7 @@ orders, prereqs exist and come earlier, no cycles, lesson shape (3 try-its that 
 - **Chart**: single-series inline SVG; line color is a separate `--chart-line` token (#2c55e0 light /
   #6383fb dark) validated against card surfaces.
 
-## Skills registered at handoff (19)
+## Skills registered (36)
 
 | order | id | category | mode | prereqs |
 |---|---|---|---|---|
@@ -168,6 +178,25 @@ orders, prereqs exist and come earlier, no cycles, lesson shape (3 try-its that 
 | 255 | pct-change | percent | exact (L3 estimate) | pct-what |
 | 260 | pct-estimate | percent | estimate | pct-tips, pct-discount |
 | 265 | pct-rule72 | percent | estimate | pct-change |
+| 40 | x4-x8 | tricks | exact | – |
+| 120 | complements | addsub | exact (L3 = making change, money) | ltr-sub |
+| 300 | square-2d | multiply | exact | square-5 |
+| 305 | close-pairs | multiply | exact | square-2d |
+| 310 | mult-2x1 | multiply | exact | ltr-add |
+| 315 | mult-2x2 | multiply | exact (add / subtract / factor) | mult-2x1 |
+| 320 | square-3d | multiply | exact | square-2d, mult-2x1 |
+| 325 | mult-2x3 | multiply | exact | mult-2x2 |
+| 400 | divide-1d | divide | exact | mult-2x1 |
+| 405 | divisibility | divide | exact (remainders; missing digit) | – |
+| 410 | frac-decimal | divide | exact, 3 decimals (L3 rounds) | divide-1d |
+| 500 | est-round | estimate | estimate (shopping totals) | ltr-add |
+| 505 | est-product | estimate | estimate | mult-2x1 |
+| 510 | est-quotient | estimate | estimate | divide-1d |
+| 515 | est-sqrt | estimate | estimate | square-2d |
+| 600 | day-of-week | extras | choice | – |
+| 605 | phonetic-code | extras | exact (decode word → number) | – |
+
+(Step-6 rows are listed after the original 19; the registry sorts by order.)
 
 Order ranges for new skills: tricks 10–90, addsub 100–190, percent 200–290, multiply 300s, divide 400s,
 estimate 500s, extras 600s. Category labels live in `ui/labels.ts` (all seven already defined).
@@ -195,7 +224,7 @@ Same verification routine as before: harness + exhaustive per-skill `*.spec.ts` 
 `VITE_QMM_SEEDS=20000` stress pass, print sample walkthroughs and read them for wording/articles, then drive
 the app in Playwright and look at screenshots.
 
-### Open decisions to confirm with the owner before/early in step 6
+### Step 6 decisions (confirmed by the owner — all three recommended defaults)
 
 1. **Weekday answers** (day-of-week; maybe divisibility yes/no). The keypad is numbers-only. Recommended: add
    a `choices?: string[]` answer type (answer = index) rendered as big buttons in `ProblemSolver`, with grading,
@@ -215,6 +244,50 @@ the app in Playwright and look at screenshots.
 - Hands-free mode: read problem → listen → say right/wrong (+ correct answer) → short pause → next;
   a "repeat" voice command.
 
+### Hosting (GitHub Pages)
+
+`.github/workflows/deploy-pages.yml` runs `npm ci`, `npm test`, `npm run build` and publishes `dist/` on every
+push to `main` (or by hand from the Actions tab). Live URL: https://aidancole74.github.io/mental-math-model/ .
+One-time owner setup: repo Settings → Pages → Source: "GitHub Actions". `base: './'` + hash routes mean the build
+works from the `/mental-math-model/` subfolder; verified locally that the service worker registers with that
+scope and the app reloads offline. Voice mode (step 7) is on hold at the owner's request.
+
+**Practising an unlearned skill** (from its page or a direct link) now counts as learning it: `withAttempt`
+creates the progress record instead of dropping the answer.
+
+### UI refresh (between steps 6 and 7)
+
+The owner asked for a fuller, more polished UI ("polished & calm" chosen over gamified; no daily goal,
+achievements, sprint or daily challenge). What changed:
+- **Menu bar** (`ui/visuals.tsx` `TabBar`, `tabFor(route)`): Home / Learn / Progress / Settings. Shown on tab
+  screens only; lessons, sessions, summary, placement and mistake retries stay full-screen. `App.tsx` wraps tab
+  screens in `.with-tabs`, which pads the bottom. Progress tab shows a red badge with the mistakes count.
+- **Category identity**: each category has a colour pair (`--cat-<id>` / `--cat-<id>-bg`, light + dark) and a
+  text glyph (`CATEGORY_GLYPH`); add class `cat-<id>` to any element to get `--cat` / `--cat-bg`. `CatTile`,
+  `CatChip`, `Ring` (SVG progress ring) live in `ui/visuals.tsx`.
+- **Home**: greeting + streak chip, 7-day week strip, mini stats, "Worth a quick review" (2 picks from
+  `reviewPicks`), and the two main actions as rich buttons. **Learn**: category sections with mastery rings and
+  a "Next" tag. **Skill detail**: hero, mastery ring with level and next review, stats, last-12-answers bars,
+  the lesson idea; actions stick above the menu bar (`.sticky-actions`). **Progress**: week strip, per-category
+  breakdown, mistakes row moved up. **Settings**: grouped cards.
+- **Practice**: 10-segment progress (green/red per answer), "N in a row" chip from 3, category chip for the
+  current skill in smart mix, pop/shake on right/wrong. **Summary**: accuracy ring, headline, new-personal-best
+  callout (`prevBestMs` from `bestSessionAvg`), best run, and a problem-by-problem recap rebuilt from ids.
+- Pure helpers for all of this are in `engine/stats.ts` with `stats.spec.ts`.
+
+### Step 6 notes
+
+- Estimation walkthroughs aim well inside the 10% band: `est-product` may use one halfway number (35, 450)
+  and prefers plans within 5%; `est-quotient` leaves divisors under 20 alone and regenerates if its plan is
+  worse than 8%. Integer estimate answers use `tenPercentWhole` so the accepted range stays whole.
+- Day-of-week codes (Sunday = 0): months 033 614 625 035; centuries 1800s 2, 1900s 0, 2000s 6; leap
+  Jan/Feb one less (0 wraps to 6). Verified against `Date` for every day 1800–2099.
+- Phonetic words carry hand-written numbers; the spec decodes their sound lists and also checks each sound
+  has a plausible spelling in the word. Codes never start with s/z (no leading zero on the keypad).
+- Divisibility hints state the rule only (small answers would otherwise collide with digits in a hint).
+- The placement test now answers inside each skill's own limit (`placementLimitMs`), since several new
+  skills have level-2 targets under the 10 s default.
+
 ## Gotchas learned the hard way
 
 - The Bash tool's safety checker rejects some heredocs containing template literals or regexes. Write TS files
@@ -227,8 +300,10 @@ the app in Playwright and look at screenshots.
   `chromium.launch()` work without installing. Use a 390×844 viewport for phone checks.
 - tsconfig has `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` on: index results may be undefined
   (use `?? fallback`), and optional props can't be assigned `undefined` (use conditional spreads).
-- **NumberPad caps input at 2 decimal places** (`applyKey` in `ui/NumberPad.tsx`) and `isCorrect` treats
-  non-integers as equal within 0.005. Fractions-to-decimals (0.125, 0.375) needs both relaxed — e.g. a per-problem
-  `decimals` field driving the pad cap and the grading precision.
+- The keypad caps decimals at `problem.decimals ?? 2` and grading uses the same precision (resolved in step 6).
+- Pressing Enter while a button has focus is ignored by `ProblemSolver` on purpose; in Playwright, tap
+  Check rather than pressing Enter after clicking Hint.
+- A fresh profile only gets level-1 problems (box 1). To screenshot levels 2–3, seed a skill's `box` in
+  `localStorage['qmm.data.v1']` after the app has saved once.
 - Keep `skills/` free of React and of `engine/` imports except pure helpers, so skill files stay testable and
   there are no import cycles (`defineSkill` lives in `define.ts` for that reason).
